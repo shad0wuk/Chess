@@ -9,63 +9,59 @@ class Engine:
         self.maxDepth = maxDepth
     
     def getBestMove(self):
-        return self.engine(None, 1)
+        return self.minmax(None, 1) #no pass candidate and start at depth = 1
 
-    def evalFunct(self):
+    def evaluate(self):
         compt = 0
         #Sums up the material values
         for i in range(64):
-            compt += self.squareResPoints(chess.SQUARES[i])
-        compt += self.mateOpportunity() + self.openning() + 0.001 * rnd.random()
-        return compt
+            square = chess.SQUARES[i]
+                
+            #Takes a square as input and 
+            #returns the corresponding Hans Berliner's
+            #system value of it's resident
+            pieceValue = 0
+            if(self.board.piece_type_at(square) == chess.PAWN):
+                pieceValue = 1
+            elif (self.board.piece_type_at(square) == chess.ROOK):
+                pieceValue = 5.1
+            elif (self.board.piece_type_at(square) == chess.BISHOP):
+                pieceValue = 3.33
+            elif (self.board.piece_type_at(square) == chess.KNIGHT):
+                pieceValue = 3.2
+            elif (self.board.piece_type_at(square) == chess.QUEEN):
+                pieceValue = 8.8
 
-    def mateOpportunity(self):
-        if (self.board.legal_moves.count() == 0):
-            if (self.board.turn == self.colour):
-                return -999
+            if (self.board.color_at(square) != self.colour):
+                compt += -pieceValue
             else:
-                return 999
-        else:
-            return 0
+                compt += pieceValue
+            
+            #if checkmate - ensure engine plays the move, if oppenents move - ensure engine avoids the move
+            if self.board.is_checkmate():
+                if (self.board.turn == self.colour):
+                    compt += -9999
+                else:
+                    compt += 9999
 
-    #to make the engine developp in the first moves
-    def openning(self):
-        if (self.board.fullmove_number < 10):
-            if (self.board.turn == self.colour):
-                return 1 / 30 * self.board.legal_moves.count()
-            else:
-                return -1 / 30 * self.board.legal_moves.count()
-        else:
-            return 0
+            #to make the engine develop in the first moves
+            #evaluate the strength of the opening moves
+            if (self.board.fullmove_number < 10):
+                if (self.board.turn == self.colour):
+                    compt += 1 / 30 * self.board.legal_moves.count()
+                else:
+                    #negative score prevents engine from playing too defensively
+                    #will ensure developing moves in the first 10 moves
+                    compt += -1 / 30 * self.board.legal_moves.count()
 
-    #Takes a square as input and 
-    #returns the corresponding Hans Berliner's
-    #system value of it's resident
-    def squareResPoints(self, square):
-        pieceValue = 0
-        if(self.board.piece_type_at(square) == chess.PAWN):
-            pieceValue = 1
-        elif (self.board.piece_type_at(square) == chess.ROOK):
-            pieceValue = 5.1
-        elif (self.board.piece_type_at(square) == chess.BISHOP):
-            pieceValue = 3.33
-        elif (self.board.piece_type_at(square) == chess.KNIGHT):
-            pieceValue = 3.2
-        elif (self.board.piece_type_at(square) == chess.QUEEN):
-            pieceValue = 8.8
-
-        if (self.board.color_at(square) != self.colour):
-            return -pieceValue
-        else:
-            return pieceValue
-
-        
-    def engine(self, candidate, depth):
+            compt += 0.001 * rnd.random()
+            return compt
+   
+    def minmax(self, candidate, depth):
         
         #reached max depth of search or no possible moves
-        if ( depth == self.maxDepth
-        or self.board.legal_moves.count() == 0):
-            return self.evalFunct()
+        if ( depth == self.maxDepth or self.board.legal_moves.count() == 0):
+            return self.evaluate()
         
         else:
             #get list of legal moves of the current position
@@ -82,34 +78,30 @@ class Engine:
             #analyse board after deeper moves
             for move in moveList:
 
-                #Play move i
+                #Play move
                 self.board.push(move)
 
-                #Get value of move i (by exploring the repercussions)
-                value = self.engine(newCandidate, depth + 1) 
+                #Get value of move (by exploring the repercussions)
+                eval = self.minmax(newCandidate, depth + 1) 
 
                 #Basic minmax algorithm:
                 #if maximizing (engine's turn)
-                if(value > newCandidate and depth % 2 != 0):
+                if(eval > newCandidate and depth % 2 != 0):
                     #need to save move played by the engine
                     if (depth == 1):
                         bestMove = move
-                    newCandidate = value
+                    newCandidate = eval
                 #if minimizing (human player's turn)
-                elif(value < newCandidate and depth % 2 == 0):
-                    newCandidate = value
+                elif(eval < newCandidate and depth % 2 == 0):
+                    newCandidate = eval
 
                 #Alpha-beta prunning cuts: 
                 #(if previous move was made by the engine)
-                if (candidate != None
-                 and value < candidate
-                 and depth % 2 == 0):
+                if (candidate != None and eval < candidate and depth % 2 == 0):
                     self.board.pop()
                     break
                 #(if previous move was made by the human player)
-                elif (candidate != None 
-                and value > candidate 
-                and depth % 2 != 0):
+                elif (candidate != None and eval > candidate and depth % 2 != 0):
                     self.board.pop()
                     break
                 
@@ -118,8 +110,9 @@ class Engine:
 
             #Return result
             if (depth > 1):
-                #eturn value of a move in the tree
+                #return value of a move in the tree
                 return newCandidate
             else:
                 #return the move (only on first move)
                 return bestMove
+            

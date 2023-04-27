@@ -11,6 +11,7 @@ class Main:
         try:
             print(self.board.legal_moves)
             print("To undo your last move, type \"undo\".")
+            print(self.board)
             #get human move
             play = input("Your move: ")
             if (play == "undo"):
@@ -28,7 +29,10 @@ class Main:
     #play engine move
     def playEngineMove(self, maxDepth, colour):
         engine = ChessEngine.Engine(self.board, maxDepth, colour)
-        self.board.push(engine.getBestMove())
+        play = engine.getBestMove()
+        self.board.push(play)
+        print(self.board)
+        print("Opponent played: " + str(play))
 
     #start a game
     def startGame(self):
@@ -38,25 +42,20 @@ class Main:
             colour = input("Play as (type \"white\" or \"black\"): ")
         maxDepth = None
         while(isinstance(maxDepth, int) == False):
-            maxDepth = int(input("""Choose depth: """))
+            maxDepth = int(input("Choose depth: "))
 
         if colour == "white":
             while not self.board.is_game_over():
-                print(self.board)
                 self.playHumanMove()
-                print(self.board)
-                if self.board.is_checkmate() == False:
+                if not self.board.is_checkmate():
                     print("The engine is thinking...")
                     self.playEngineMove(maxDepth, chess.BLACK)
-                    print(self.board)
         elif colour == "black":
             while not self.board.is_game_over():
                 print("The engine is thinking...")
                 self.playEngineMove(maxDepth, chess.WHITE)
-                print(self.board)
-                if self.board.is_checkmate() == False:
+                if not self.board.is_checkmate():
                     self.playHumanMove()
-                    print(self.board)
         print(self.board.outcome())
 
         #reset the board
