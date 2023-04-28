@@ -9,7 +9,7 @@ class Engine:
         self.maxDepth = maxDepth
     
     def getBestMove(self):
-        return self.minmax(None, 1) #no pass candidate and start at depth = 1
+        return self.minmax(None, 1)
 
     def evaluate(self):
         compt = 0
@@ -81,7 +81,7 @@ class Engine:
                 #Play move
                 self.board.push(move)
 
-                #Get value of move (by exploring the repercussions)
+                #Get value of move (by exploring the repercussions) - recursive call
                 eval = self.minmax(newCandidate, depth + 1) 
 
                 #Basic minmax algorithm:
