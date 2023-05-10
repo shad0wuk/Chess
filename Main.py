@@ -29,9 +29,9 @@ class Main:
             self.playHumanMove()
 
     #play engine move
-    def playEngineMove(self, maxDepth, colour):
+    def playEngineMove(self, maxDepth, colour, difficulty):
         engine = ChessEngine.Engine(self.board, maxDepth, colour)
-        self.board.push(engine.getBestMove())
+        self.board.push(engine.getBestMove(difficulty))
         print(self.board)
         lastMove = self.board.peek()
         print("Opponent played: " + str(lastMove))
@@ -42,6 +42,17 @@ class Main:
         colour = None
         while(colour != "white" and colour != "black"):
             colour = input("Play as (type \"white\" or \"black\"): ")
+
+        difficulty = None
+        while(difficulty != "easy" and difficulty != "medium" and difficulty != "hard"):
+            difficulty = input("Choose difficulty (type \"easy\", \"medium\" or \"hard\"): ")
+
+        if difficulty == "easy":
+            difficulty = 10         
+        elif difficulty == "medium":
+            difficulty = 20          
+        elif difficulty == "hard":
+            difficulty = 30      
             
         maxDepth = None
         while(isinstance(maxDepth, int) == False):
@@ -54,11 +65,11 @@ class Main:
                 self.playHumanMove()
                 if not self.board.is_checkmate():
                     print("The engine is thinking...")
-                    self.playEngineMove(maxDepth, chess.BLACK)
+                    self.playEngineMove(maxDepth, chess.BLACK, difficulty)
         elif colour == "black":
             while not self.board.is_game_over():
                 print("The engine is thinking...")
-                self.playEngineMove(maxDepth, chess.WHITE)
+                self.playEngineMove(maxDepth, chess.WHITE, difficulty)
                 if not self.board.is_checkmate():
                     if self.board.is_check():
                         print("Check!")

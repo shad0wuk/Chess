@@ -1,15 +1,22 @@
 import chess
 import random as rnd
-
+import time
 class Engine:
 
     def __init__(self, board, maxDepth, colour):
         self.board = board
         self.colour = colour
         self.maxDepth = maxDepth
+        self.difficulty = None
     
-    def getBestMove(self):
-        return self.minmax(None, 1)
+    def getBestMove(self, difficulty):
+        start = time.time()
+        self.difficulty = difficulty
+        bestMove = self.minmax(None, 1)
+        end = time.time()
+        timeTaken = end - start
+        print("Time taken: " + str(timeTaken) + " seconds.")
+        return bestMove
 
     def evaluate(self):
         compt = 0
@@ -36,29 +43,30 @@ class Engine:
                 compt += -pieceValue
             else:
                 compt += pieceValue
-            
-            #if checkmate - ensure engine plays the move, if oppenents move - ensure engine avoids the move
-            if self.board.is_checkmate():
-                if (self.board.turn == self.colour):
-                    compt += -9999
-                else:
-                    compt += 9999
+        
+        #if checkmate - ensure engine plays the move, if oppenents move - ensure engine avoids the move
+        if self.board.is_checkmate():
+            if (self.board.turn == self.colour):
+                compt += -999
+            else:
+                compt += 999
 
-            #to make the engine develop in the first moves
-            #evaluate the strength of the opening moves
-            if (self.board.fullmove_number < 10):
-                if (self.board.turn == self.colour):
-                    compt += 1 / 30 * self.board.legal_moves.count()
-                else:
-                    #negative score prevents engine from playing too defensively
-                    #will ensure developing moves in the first 10 moves
-                    compt += -1 / 30 * self.board.legal_moves.count()
+        #to make the engine develop in the first moves
+        #evaluate the strength of the opening moves
+        if (self.board.fullmove_number < 10):
+            if (self.board.turn == self.colour):
+                compt += 1 / 50 * self.board.legal_moves.count()
+            else:
+                #negative score prevents engine from playing too defensively
+                #will ensure developing moves in the first 10 moves
+                compt += -1 / 50 * self.board.legal_moves.count()
 
-            compt += 0.001 * rnd.random()
-            return compt
+        compt += 0.001 * rnd.random()
+        return compt
    
     def minmax(self, candidate, depth):
-        
+        start = time.time()
+        timeLimit = self.difficulty
         #reached max depth of search or no possible moves
         if ( depth == self.maxDepth or self.board.legal_moves.count() == 0):
             return self.evaluate()
@@ -77,31 +85,33 @@ class Engine:
             
             #analyse board after deeper moves
             for move in moveList:
-
+                if (time.time() - start > timeLimit):
+                    break
                 #Play move
                 self.board.push(move)
 
                 #Get value of move (by exploring the repercussions) - recursive call
-                eval = self.minmax(newCandidate, depth + 1) 
+                evaluation = self.minmax(newCandidate, depth + 1) 
 
                 #Basic minmax algorithm:
                 #if maximizing (engine's turn)
-                if(eval > newCandidate and depth % 2 != 0):
+                if(evaluation > newCandidate and depth % 2 != 0):
                     #need to save move played by the engine
                     if (depth == 1):
                         bestMove = move
-                    newCandidate = eval
+                        bestEval = evaluation
+                    newCandidate = evaluation
                 #if minimizing (human player's turn)
-                elif(eval < newCandidate and depth % 2 == 0):
-                    newCandidate = eval
+                elif(evaluation < newCandidate and depth % 2 == 0):
+                    newCandidate = evaluation
 
                 #Alpha-beta prunning cuts: 
                 #(if previous move was made by the engine)
-                if (candidate != None and eval < candidate and depth % 2 == 0):
+                if (candidate != None and evaluation < candidate and depth % 2 == 0):
                     self.board.pop()
                     break
                 #(if previous move was made by the human player)
-                elif (candidate != None and eval > candidate and depth % 2 != 0):
+                elif (candidate != None and evaluation > candidate and depth % 2 != 0):
                     self.board.pop()
                     break
                 
@@ -114,5 +124,7 @@ class Engine:
                 return newCandidate
             else:
                 #return the move (only on first move)
+                print(bestEval)
                 return bestMove
+            
             
