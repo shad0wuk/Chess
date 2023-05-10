@@ -13,10 +13,16 @@ class Engine:
         start = time.time()
         self.difficulty = difficulty
         bestMove = self.minmax(None, 1)
+        #if bestMove is a float, generate a random legal move - this is if depth = 1
         end = time.time()
         timeTaken = end - start
         print("Time taken: " + str(timeTaken) + " seconds.")
+        if (isinstance(bestMove, float)):
+            moveList = list(self.board.legal_moves)
+            bestMove = moveList[rnd.randint(0, len(moveList) - 1)]
+        
         return bestMove
+        
 
     def evaluate(self):
         compt = 0
@@ -99,7 +105,6 @@ class Engine:
                     #need to save move played by the engine
                     if (depth == 1):
                         bestMove = move
-                        bestEval = evaluation
                     newCandidate = evaluation
                 #if minimizing (human player's turn)
                 elif(evaluation < newCandidate and depth % 2 == 0):
@@ -124,7 +129,6 @@ class Engine:
                 return newCandidate
             else:
                 #return the move (only on first move)
-                print(bestEval)
                 return bestMove
             
             
