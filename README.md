@@ -1,4 +1,5 @@
 # Computer Simulation Framework for Chess
+GitHub link: https://github.com/shad0wuk/Chess
 
 This project is a computer simulation framework for chess.
 
