@@ -1,22 +1,27 @@
+#import libraries
 import chess
 import random as rnd
 import time
 class Engine:
 
     def __init__(self, board, maxDepth, colour):
+        #initialise variables for the engine
         self.board = board
         self.colour = colour
         self.maxDepth = maxDepth
         self.difficulty = None
     
     def getBestMove(self, difficulty):
+        #start timer
         start = time.time()
         self.difficulty = difficulty
+        #call minmax algorithm to find best move
         bestMove = self.minmax(None, 1)
-        #if bestMove is a float, generate a random legal move - this is if depth = 1
+        #time taken to calculate the best move
         end = time.time()
         timeTaken = end - start
         print("Time taken: " + str(timeTaken) + " seconds.")
+        #if bestMove is a float, generate a random legal move - this is if depth = 1
         if (isinstance(bestMove, float)):
             moveList = list(self.board.legal_moves)
             bestMove = moveList[rnd.randint(0, len(moveList) - 1)]
@@ -26,13 +31,11 @@ class Engine:
 
     def evaluate(self):
         compt = 0
-        #Sums up the material values
+        #iterate through all squares on the board
         for i in range(64):
             square = chess.SQUARES[i]
                 
-            #Takes a square as input and 
-            #returns the corresponding Hans Berliner's
-            #system value of it's resident
+            #input a square to return the Hans Berliner's value of the piece
             pieceValue = 0
             if(self.board.piece_type_at(square) == chess.PAWN):
                 pieceValue = 1
@@ -44,33 +47,34 @@ class Engine:
                 pieceValue = 3.2
             elif (self.board.piece_type_at(square) == chess.QUEEN):
                 pieceValue = 8.8
-
+            
             if (self.board.color_at(square) != self.colour):
                 compt += -pieceValue
             else:
                 compt += pieceValue
         
-        #if checkmate - ensure engine plays the move, if oppenents move - ensure engine avoids the move
+        #if checkmate - ensure engine plays the move, if opponents move - ensure engine avoids the move
         if self.board.is_checkmate():
             if (self.board.turn == self.colour):
-                compt += -999
+                compt += -9999
             else:
-                compt += 999
+                compt += 9999
 
         #to make the engine develop in the first moves
         #evaluate the strength of the opening moves
         if (self.board.fullmove_number < 10):
             if (self.board.turn == self.colour):
+                #positive score prevents engine from playing too aggressively
                 compt += 1 / 50 * self.board.legal_moves.count()
             else:
                 #negative score prevents engine from playing too defensively
-                #will ensure developing moves in the first 10 moves
                 compt += -1 / 50 * self.board.legal_moves.count()
-
+        #random weight to prevent engine from playing the same moves
         compt += 0.001 * rnd.random()
         return compt
    
     def minmax(self, candidate, depth):
+        #start timer for difficulty setting
         start = time.time()
         timeLimit = self.difficulty
         #reached max depth of search or no possible moves
@@ -78,12 +82,12 @@ class Engine:
             return self.evaluate()
         
         else:
-            #get list of legal moves of the current position
+            #list of legal moves
             moveList = list(self.board.legal_moves)
             
             #initialise newCandidate
             newCandidate = None
-            #(uneven depth means engine's turn)
+            #uneven depth = engine's turn
             if(depth % 2 != 0):
                 newCandidate = float("-inf")
             else:
@@ -91,44 +95,45 @@ class Engine:
             
             #analyse board after deeper moves
             for move in moveList:
+                #if time limit reached, stop searching
                 if (time.time() - start > timeLimit):
                     break
-                #Play move
+                #play move
                 self.board.push(move)
 
-                #Get value of move (by exploring the repercussions) - recursive call
+                #recursive call to minmax algorithm to find evaluation value of the move
                 evaluation = self.minmax(newCandidate, depth + 1) 
 
-                #Basic minmax algorithm:
+                #Minmax algorithm:
                 #if maximizing (engine's turn)
                 if(evaluation > newCandidate and depth % 2 != 0):
-                    #need to save move played by the engine
+                    #if first move, set bestMove to the first move
                     if (depth == 1):
-                        bestMove = move
+                        firstMove = move
                     newCandidate = evaluation
-                #if minimizing (human player's turn)
+                #if minimizing (player's turn)
                 elif(evaluation < newCandidate and depth % 2 == 0):
                     newCandidate = evaluation
 
-                #Alpha-beta prunning cuts: 
-                #(if previous move was made by the engine)
+                #Alpha-Beta prunning: 
+                #if previous move was made by the engine
                 if (candidate != None and evaluation < candidate and depth % 2 == 0):
                     self.board.pop()
                     break
-                #(if previous move was made by the human player)
+                #if previous move was made by the human player
                 elif (candidate != None and evaluation > candidate and depth % 2 != 0):
                     self.board.pop()
                     break
                 
-                #Undo last move
+                #undo last move
                 self.board.pop()
 
-            #Return result
+            #return result
             if (depth > 1):
-                #return value of a move in the tree
+                #return evaluation value of a move in the tree
                 return newCandidate
             else:
-                #return the move (only on first move)
-                return bestMove
+                #for first move, return the best move
+                return firstMove
             
             
