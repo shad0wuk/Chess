@@ -26,4 +26,4 @@ python Main.py
 
 ## Credits
 
-This project was developed by Kieran Cunningham.
+This project was developed by Kieran.
